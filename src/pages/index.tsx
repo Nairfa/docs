@@ -16,12 +16,12 @@ import { Link } from "../components/Link";
 const Home: NextPage = () => {
   return (
     <>
-      <div tw="-mx-8">
+      <div tw="max-w-5xl mx-auto z-10">
         <div tw="mb-12">
-            <h1 tw="text-5xl font-semibold mb-4 text-gray-900" style={{ letterSpacing: "-1.5px" }}>
+            <h1 tw="text-4xl font-semibold mb-4 text-gray-900" style={{ letterSpacing: "-1.5px", fontSize: "2.5rem" }}>
                 Railway Documentation
             </h1>
-            <p tw="text-xl text-gray-600">
+            <p tw="text-xl text-gray-600" style={{ fontSize: '1.125rem', color: 'var(--colors-gray-700)' }} className="dark:!text-[var(--colors-gray-700)]">
                 Find user guides, quickstarts, tutorials, use cases, deploy templates, functions and more.
             </p>
         </div>
@@ -29,48 +29,48 @@ const Home: NextPage = () => {
         <div tw="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4">
           {/* How Railway Works Card */}
           <Link href="overview/about-railway">
-            <div className="group" tw="relative bg-gradient-to-br from-[#8CAEF2]/25 to-white hover:from-[#8CAEF2]/50 hover:to-white dark:from-[#1D4596]/25 dark:to-[#131415] dark:hover:from-[#1D4596]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-56">
-              <img src="/images/card-light-how-railway-works.svg" alt="How Railway Works" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none dark:hidden" />
-              <img src="/images/card-dark-how-railway-works.svg" alt="How Railway Works" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none hidden dark:block" />
-              <div tw="relative z-10 p-8">
-                <div tw="font-medium text-xl mb-2 text-gray-900" style={{ letterSpacing: '-0.25px' }}>How Railway Works</div>
-                <div tw="text-gray-600 text-base font-normal max-w-[16rem]">Understand what Railway offers, including the main components of the platform.</div>
+            <div className="group" tw="relative bg-gradient-to-br from-[#8CAEF2]/25 to-white hover:from-[#8CAEF2]/50 hover:to-white dark:from-[#1D4596]/25 dark:to-[#131415] dark:hover:from-[#1D4596]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-40 md:h-56">
+              <img src="/images/card-light-how-railway-works.svg" alt="How Railway Works" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none dark:hidden" />
+              <img src="/images/card-dark-how-railway-works.svg" alt="How Railway Works" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none hidden dark:block" />
+              <div tw="relative z-10 p-6">
+                <div tw="font-medium mb-1 text-gray-900" style={{ letterSpacing: '-0.25px', fontSize: '1.125rem' }}>How Railway Works</div>
+                <div tw="text-gray-600 text-base font-normal max-w-[20rem] md:max-w-[16rem]" className="dark:!text-[var(--colors-gray-700)]">Understand what Railway offers, including the main components of the platform.</div>
               </div>
             </div>
           </Link>
           
           {/* Guides Card */}
           <Link href="/guides/foundations">
-            <div className="group" tw="relative bg-gradient-to-br from-[#F1C1C0]/25 to-white hover:from-[#F1C1C0]/50 hover:to-white dark:from-[#741D1B]/25 dark:to-[#131415] dark:hover:from-[#741D1B]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-56">
-              <img src="/images/card-light-guides.svg" alt="Guides" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none dark:hidden" />
-              <img src="/images/card-dark-guides.svg" alt="Guides" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none hidden dark:block" />
-              <div tw="relative z-10 p-8">
-                <div tw="font-medium text-xl mb-2 text-gray-900" style={{ letterSpacing: '-0.25px' }}>Guides</div>
-                <div tw="text-gray-600 text-base font-normal max-w-[16rem]">Explore our guides to learn how to configure or enable a specific feature on the platform.</div>
+            <div className="group" tw="relative bg-gradient-to-br from-[#F1C1C0]/25 to-white hover:from-[#F1C1C0]/50 hover:to-white dark:from-[#741D1B]/25 dark:to-[#131415] dark:hover:from-[#741D1B]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-40 md:h-56">
+              <img src="/images/card-light-guides.svg" alt="Guides" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none dark:hidden" />
+              <img src="/images/card-dark-guides.svg" alt="Guides" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none hidden dark:block" />
+              <div tw="relative z-10 p-6">
+                <div tw="font-medium mb-1 text-gray-900" style={{ letterSpacing: '-0.25px', fontSize: '1.125rem' }}>Guides</div>
+                <div tw="text-gray-600 text-base font-normal max-w-[20rem] md:max-w-[16rem]" className="dark:!text-[var(--colors-gray-700)]">Explore our guides to learn how to configure or enable a specific feature on the platform.</div>
               </div>
             </div>
           </Link>
           
           {/* Quickstart Card */}
           <Link href="/quick-start">
-            <div className="group" tw="relative bg-gradient-to-br from-[#EFD580]/25 to-white hover:from-[#EFD580]/50 hover:to-white dark:from-[#675518]/25 dark:to-[#131415] dark:hover:from-[#675518]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-56">
-              <img src="/images/card-light-quickstart.svg" alt="Quickstart" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none dark:hidden" />
-              <img src="/images/card-dark-quickstart.svg" alt="Quickstart" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none hidden dark:block" />
-              <div tw="relative z-10 p-8">
-                <div tw="font-medium text-xl mb-2 text-gray-900" style={{ letterSpacing: '-0.25px' }}>Quickstart</div>
-                <div tw="text-gray-600 text-base font-normal max-w-[16rem]">Deploy in minutes. Jump into our quickstart guide or deploy with your favorite stack below.</div>
+            <div className="group" tw="relative bg-gradient-to-br from-[#EFD580]/25 to-white hover:from-[#EFD580]/50 hover:to-white dark:from-[#675518]/25 dark:to-[#131415] dark:hover:from-[#675518]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-40 md:h-56">
+              <img src="/images/card-light-quickstart.svg" alt="Quickstart" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none dark:hidden" />
+              <img src="/images/card-dark-quickstart.svg" alt="Quickstart" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none hidden dark:block" />
+              <div tw="relative z-10 p-6">
+                <div tw="font-medium mb-1 text-gray-900" style={{ letterSpacing: '-0.25px', fontSize: '1.125rem' }}>Quickstart</div>
+                <div tw="text-gray-600 text-base font-normal max-w-[20rem] md:max-w-[16rem]" className="dark:!text-[var(--colors-gray-700)]">Deploy in minutes. Jump into our quickstart guide or deploy with your favorite stack below.</div>
               </div>
             </div>
           </Link>
           
           {/* Tutorials Card */}
           <Link href="/tutorials/getting-started">
-            <div className="group" tw="relative bg-gradient-to-br from-[#95D0B4]/25 to-white hover:from-[#95D0B4]/50 hover:to-white dark:from-[#26543F]/25 dark:to-[#131415] dark:hover:from-[#26543F]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-56">
-              <img src="/images/card-light-tutorials.svg" alt="Tutorials" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none dark:hidden" />
-              <img src="/images/card-dark-tutorials.svg" alt="Tutorials" tw="absolute bottom-0 right-0 h-full w-auto pointer-events-none hidden dark:block" />
-              <div tw="relative z-10 p-8">
-                <div tw="font-medium text-xl mb-2 text-gray-900" style={{ letterSpacing: '-0.25px' }}>Tutorials</div>
-                <div tw="text-gray-600 text-base font-normal max-w-[16rem]">Step-by-step guides on common developer scenarios.</div>
+            <div className="group" tw="relative bg-gradient-to-br from-[#95D0B4]/25 to-white hover:from-[#95D0B4]/50 hover:to-white dark:from-[#26543F]/25 dark:to-[#131415] dark:hover:from-[#26543F]/50 dark:hover:to-[#131415] border border-gray-100 dark:border-gray-200 rounded-lg transition-all duration-200 cursor-pointer overflow-hidden h-40 md:h-56">
+              <img src="/images/card-light-tutorials.svg" alt="Tutorials" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none dark:hidden" />
+              <img src="/images/card-dark-tutorials.svg" alt="Tutorials" tw="absolute bottom-0 right-0 w-auto h-auto max-h-full pointer-events-none hidden dark:block" />
+              <div tw="relative z-10 p-6">
+                <div tw="font-medium mb-1 text-gray-900" style={{ letterSpacing: '-0.25px', fontSize: '1.125rem' }}>Tutorials</div>
+                <div tw="text-gray-600 text-base font-normal max-w-[20rem] md:max-w-[16rem]" className="dark:!text-[var(--colors-gray-700)]">Step-by-step guides on common developer scenarios.</div>
               </div>
             </div>
           </Link>
