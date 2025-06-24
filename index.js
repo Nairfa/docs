@@ -224,22 +224,21 @@ Selamat datang di tim! 🚀`;
     // Handle step text lainnya
     else if (text) {
     if (step.step === 'nama') {
-      if (text.length < 3) {
+      if (!isValidName(text)) {
         reply = "❌ Nama terlalu pendek!\n\nMasukkan nama lengkap kamu (minimal 3 karakter):";
       } else {
         step.nama = text;
         step.step = 'nik';
         reply = `✅ Nama: ${text}
-
-**Step 2/6**: Masukkan NIK KTP (16 digit)
-
-Contoh: 3271234567890123`;
+\n**Step 2/6**: Masukkan NIK KTP (16 digit)\n\nContoh: 3271234567890123`;
       }
     }
     
     else if (step.step === 'nik') {
-      if (!/^\d{16}$/.test(text)) {
+      if (!isValidNIK(text)) {
         reply = "❌ NIK KTP harus 16 digit angka!\n\nContoh: 3271234567890123\n\nMasukkan NIK KTP yang benar:";
+      } else if (isBlacklistedNIK(text)) {
+        reply = "❌ NIK KTP ini diblokir atau disuspend!\n\nSilakan hubungi admin.";
       } else {
         // Cek duplikat NIK
         const nikExists = Object.values(userData).some(user => user.nik === text);
@@ -248,38 +247,20 @@ Contoh: 3271234567890123`;
         } else {
           step.nik = text;
           step.step = 'nomor';
-          reply = `✅ NIK KTP: ${text}
-
-**Step 3/6**: Masukkan nomor HP
-
-Contoh: 081234567890`;
+          reply = `✅ NIK KTP: ${text}\n\n**Step 3/6**: Masukkan nomor HP\n\nContoh: 081234567890`;
         }
       }
     }
     
     else if (step.step === 'nomor') {
-      if (!/^08\d{8,11}$/.test(text)) {
+      if (!isValidPhoneNumber(text)) {
         reply = "❌ Format nomor HP salah!\n\nGunakan format: 08xxxxxxxxxx\n\nContoh: 081234567890";
+      } else if (isBlacklistedNomor(text)) {
+        reply = "❌ Nomor HP ini diblokir atau disuspend!\n\nSilakan gunakan nomor lain atau hubungi admin.";
       } else {
         step.nomor = text;
         step.step = 'posisi';
-        step.nomor = text;
-        step.step = 'posisi';
-        reply = `✅ No HP: ${text}
-
-**Step 4/6**: Pilih posisi/jabatan kamu:
-
-1️⃣ Mandor
-2️⃣ Tukang Batu
-3️⃣ Tukang Kayu
-4️⃣ Tukang
-5️⃣ Semi Tukang
-6️⃣ Operator Alat Berat
-7️⃣ Pekerja Umum (Kenek)
-8️⃣ Supervisor
-9️⃣ Quality Control
-
-Ketik angka (1-9):`;
+        reply = `✅ No HP: ${text}\n\n**Step 4/6**: Pilih posisi/jabatan kamu:\n\n1️⃣ Mandor\n2️⃣ Tukang Batu\n3️⃣ Tukang Kayu\n4️⃣ Tukang\n5️⃣ Semi Tukang\n6️⃣ Operator Alat Berat\n7️⃣ Pekerja Umum (Kenek)\n8️⃣ Supervisor\n9️⃣ Quality Control\n\nKetik angka (1-9):`;
       }
     }
     
@@ -311,22 +292,43 @@ Ketik angka (1-9):`;
       }
     }
   }
+}
 
-  // DEFAULT RESPONSE (hanya jika ada text dan bukan dalam proses registrasi)
-  else if (text) {
-    reply = `Saya tidak paham perintah "${text}" 🤔
+// DEFAULT RESPONSE (hanya jika ada text dan bukan dalam proses registrasi)
+else if (text) {
+  reply = `Saya tidak paham perintah "${text}" 🤔
 
 Ketik /help untuk melihat daftar perintah yang tersedia.`;
-  }
+}
 
-  // Kirim balasan hanya jika ada reply
-  if (reply) {
-    await sendMessage(chatId, reply);
-  }
-  
-  res.sendStatus(200);
+// Kirim balasan hanya jika ada reply
+if (reply) {
+  await sendMessage(chatId, reply);
+}
+
+res.sendStatus(200);
 });
 
 app.listen(port, () => {
   console.log(`Server berjalan di port ${port} 🚀`);
 });
+
+// Untuk menjalankan server, gunakan perintah: npm start
+// Untuk menguji, buka browser dan akses http://localhost:8080
+
+// Helper validasi
+function isValidPhoneNumber(phone) {
+  return /^08\d{8,11}$/.test(phone);
+}
+function isValidNIK(nik) {
+  return /^\d{16}$/.test(nik);
+}
+function isValidName(name) {
+  return name && name.length >= 3;
+}
+function isBlacklistedNomor(nomor) {
+  return blacklistData.hp.includes(nomor) || blacklistData.suspend.includes(nomor);
+}
+function isBlacklistedNIK(nik) {
+  return blacklistData.nik.includes(nik) || blacklistData.suspend.includes(nik);
+}
