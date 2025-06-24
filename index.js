@@ -42,6 +42,24 @@ app.post('/setWebhook', async (req, res) => {
   }
 });
 
+// Endpoint untuk menerima webhook Telegram
+app.post(['/webhook', '/webhook/'], async (req, res) => {
+  // ...
+  if (text === '/start') {
+    await sendMessage(chatId, 'Halo! Bot aktif 🚀');
+    return res.sendStatus(200);
+  }
+});
+// Endpoint untuk mendapatkan informasi bot
+app.get('/getMe', async (req, res) => {
+  try {
+    const response = await axios.get(`${TELEGRAM_API}/getMe`);
+    res.send(response.data);
+  } catch (error) {
+    console.error('Gagal mendapatkan informasi bot:', error.message);
+    res.sendStatus(500);
+  }
+});
 // Endpoint untuk menghapus webhook Telegram
 app.post('/deleteWebhook', async (req, res) => {
   try {
