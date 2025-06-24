@@ -316,6 +316,22 @@ app.listen(port, () => {
 // Untuk menjalankan server, gunakan perintah: npm start
 // Untuk menguji, buka browser dan akses http://localhost:8080
 
+// Handler error global agar Railway tidak auto-exit pada error async
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', reason);
+});
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  process.exit(0);
+});
+
 // Helper validasi
 function isValidPhoneNumber(phone) {
   return /^08\d{8,11}$/.test(phone);
