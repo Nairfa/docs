@@ -42,8 +42,17 @@ app.post('/setWebhook', async (req, res) => {
   }
 });
 
-const userStates = {}; // Menyimpan status sementara user
-const userData = {};   // Menyimpan data hasil input user
+// Endpoint untuk menghapus webhook Telegram
+app.post('/deleteWebhook', async (req, res) => {
+  try {
+    const response = await axios.post(`${TELEGRAM_API}/deleteWebhook`);
+    res.send(response.data);
+  } catch (error) {
+    console.error('Gagal menghapus webhook:', error.message);
+    res.sendStatus(500);
+  }
+});
+
 // Fungsi untuk mengirim pesan ke Telegram
 async function sendMessage(chatId, text) {
   try {
