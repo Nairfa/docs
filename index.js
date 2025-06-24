@@ -10,6 +10,8 @@ const port = process.env.PORT || 8080;
 console.log("Project berhasil jalan 🎉");
 console.log("Selamat datang di project ini!");
 console.log("Silakan mulai dengan menjalankan perintah yang sesuai.");
+console.log('Webhook diterima 🚀', JSON.stringify(req.body, null, 2));
+
 
 // Gunakan token Telegram dari environment variable
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
@@ -22,7 +24,8 @@ app.get('/', (req, res) => {
 });
 
 // Webhook endpoint dari Telegram
-app.post('/webhook', async (req, res) => {
+app.post(['/webhook', '/webhook/'], async (req, res) => {
+
   const msg = req.body.message;
 
   if (!msg || !msg.text) return res.sendStatus(200);
