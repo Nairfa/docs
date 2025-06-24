@@ -88,6 +88,15 @@ app.post(['/webhook', '/webhook/'], async (req, res) => {
   const text = msg.text.trim();
 
   // Proses step-by-step pendaftaran
+  // Cek kalau user sedang isi nama, nomor, atau NIK tapi kirim perintah (command)
+if (text.startsWith('/')) {
+  await sendMessage(chatId, 'Kamu sedang dalam proses pendaftaran. Harap kirim data yang diminta, bukan perintah.');
+  return res.sendStatus(200);
+}
+  // Cek apakah user sudah mulai pendaftaran
+  if (!userStates[chatId]) {
+    userStates[chatId] = 'idle'; // Set status awal
+  }
   if (text === '/daftar') {
     userStates[chatId] = 'menunggu_nama';
     userData[chatId] = {};
