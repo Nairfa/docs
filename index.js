@@ -33,6 +33,10 @@ app.get('/', (req, res) => {
   res.send('App jalan di Railway! 🚀');
 });
 
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Fungsi untuk kirim pesan ke Telegram
 async function sendMessage(chatId, text) {
   try {
