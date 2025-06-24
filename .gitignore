@@ -1,0 +1,6 @@
+node_modules/
+.env
+railway.toml
+.vscode/
+.DS_Store
+
