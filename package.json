@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/Nairfa/docs/issues"
   },
-  "homepage": "https://github.com/Nairfa/docs#readme"
+  "homepage": "https://github.com/Nairfa/docs#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
