@@ -42,14 +42,7 @@ app.post('/setWebhook', async (req, res) => {
   }
 });
 
-// Endpoint untuk menerima webhook Telegram
-app.post(['/webhook', '/webhook/'], async (req, res) => {
-  // ...
-  if (text === '/start') {
-    await sendMessage(chatId, 'Halo! Bot aktif 🚀');
-    return res.sendStatus(200);
-  }
-});
+
 // Endpoint untuk mendapatkan informasi bot
 app.get('/getMe', async (req, res) => {
   try {
