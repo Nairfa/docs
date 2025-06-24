@@ -22,6 +22,23 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => {
   res.send('App jalan di Railway! 🚀');
 });
+// Middleware untuk normalisasi URL (hapus double slash)
+app.use((req, res, next) => {
+  req.url = req.url.replace(/\/+/g, '/');
+  next();
+});
+// Endpoint untuk mengatur webhook Telegram
+app.post('/setWebhook', async (req, res) => {
+  try {
+    const response = await axios.post(`${TELEGRAM_API}/setWebhook`, {
+      url: `${process.env.APP_URL}/webhook`
+    });
+    res.send(response.data);
+  } catch (error) {
+    console.error('Gagal mengatur webhook:', error.message);
+    res.sendStatus(500);
+  }
+});
 
 // Webhook endpoint dari Telegram
 app.post(['/webhook', '/webhook/'], async (req, res) => {
