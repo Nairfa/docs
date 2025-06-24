@@ -1,5 +1,3 @@
-const userStates = {}; // Menyimpan status sementara user
-const userData = {};   // Menyimpan data hasil input user
 require('dotenv').config();
 
 const express = require('express');
@@ -12,8 +10,6 @@ const port = process.env.PORT || 8080;
 console.log("Project berhasil jalan 🎉");
 console.log("Selamat datang di project ini!");
 console.log("Silakan mulai dengan menjalankan perintah yang sesuai.");
-// Pastikan environment variable TELEGRAM_TOKEN sudah diatur
-
 
 // Gunakan token Telegram dari environment variable
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
@@ -21,121 +17,316 @@ const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
 app.use(bodyParser.json());
 
+// Database sementara (nanti akan pindah ke Google Sheets)
+let userData = {};
+let registrationSteps = {};
+
+// Database blacklist dan suspend (simulasi - nanti dari external database)
+let blacklistData = {
+  // Contoh data blacklist
+  hp: ['081234567890', '087777777777'], // HP yang diblacklist
+  nik: ['3271234567890123', '3271234567890124'], // NIK yang diblacklist
+  suspend: ['081111111111', '3271234567890125'] // Data yang di-suspend
+};
+
 app.get('/', (req, res) => {
   res.send('App jalan di Railway! 🚀');
 });
-// Middleware untuk normalisasi URL (hapus double slash)
-app.use((req, res, next) => {
-  req.url = req.url.replace(/\/+/g, '/');
-  next();
-});
-// Endpoint untuk mengatur webhook Telegram
-app.post('/setWebhook', async (req, res) => {
-  try {
-    const response = await axios.post(`${TELEGRAM_API}/setWebhook`, {
-      url: `${process.env.APP_URL}/webhook`
-    });
-    res.send(response.data);
-  } catch (error) {
-    console.error('Gagal mengatur webhook:', error.message);
-    res.sendStatus(500);
-  }
-});
 
-
-// Endpoint untuk mendapatkan informasi bot
-app.get('/getMe', async (req, res) => {
-  try {
-    const response = await axios.get(`${TELEGRAM_API}/getMe`);
-    res.send(response.data);
-  } catch (error) {
-    console.error('Gagal mendapatkan informasi bot:', error.message);
-    res.sendStatus(500);
-  }
-});
-// Endpoint untuk menghapus webhook Telegram
-app.post('/deleteWebhook', async (req, res) => {
-  try {
-    const response = await axios.post(`${TELEGRAM_API}/deleteWebhook`);
-    res.send(response.data);
-  } catch (error) {
-    console.error('Gagal menghapus webhook:', error.message);
-    res.sendStatus(500);
-  }
-});
-
-// Fungsi untuk mengirim pesan ke Telegram
+// Fungsi untuk kirim pesan ke Telegram
 async function sendMessage(chatId, text) {
   try {
     await axios.post(`${TELEGRAM_API}/sendMessage`, {
       chat_id: chatId,
-      text: text,
-      parse_mode: 'Markdown'
+      text: text
     });
   } catch (error) {
-    console.error('Gagal mengirim pesan ke Telegram:', error.message);
+    console.error('Error mengirim pesan:', error.response?.data || error.message);
   }
 }
 
+// Webhook endpoint dari Telegram
 app.post(['/webhook', '/webhook/'], async (req, res) => {
   console.log('Webhook diterima 🚀', JSON.stringify(req.body, null, 2));
 
   const msg = req.body.message;
-  if (!msg || !msg.text) return res.sendStatus(200);
+
+  if (!msg) return res.sendStatus(200);
 
   const chatId = msg.chat.id;
-  const text = msg.text.trim();
+  const text = msg.text;
+  const userId = msg.from.id;
+  const userName = msg.from.first_name || "User";
+  const photo = msg.photo; // Array foto dengan berbagai ukuran
 
-  // 1. Perintah utama dulu
+  let reply = "";
+
+  // START COMMAND
   if (text === '/start') {
-    await sendMessage(chatId, 'Halo! Bot Telegram sudah aktif 🚀');
-    return res.sendStatus(200);
-  }
-  if (text === '/daftar') {
-    userStates[chatId] = 'menunggu_nama';
-    userData[chatId] = {};
-    await sendMessage(chatId, 'Silakan kirim *nama lengkap* kamu:');
-    return res.sendStatus(200);
+    reply = `Halo ${userName}! 👋
+
+🏗️ **Bot Manajemen Konstruksi**
+
+Fitur yang tersedia:
+/daftar - Registrasi sebagai pekerja
+/info - Lihat data diri
+/absen - Absensi harian
+/help - Bantuan
+
+Mulai dengan /daftar untuk mendaftar sebagai pekerja! 🚀`;
   }
 
-  // 2. Kalau user sedang dalam proses input, tapi malah kirim command lain
-  if (text.startsWith('/')) {
-    await sendMessage(chatId, 'Kamu sedang dalam proses pendaftaran. Harap kirim data yang diminta, bukan perintah.');
-    return res.sendStatus(200);
+  // HELP COMMAND
+  else if (text === '/help') {
+    reply = `📋 **Panduan Bot Konstruksi**
+
+🔹 **/daftar** - Daftar sebagai pekerja baru
+🔹 **/info** - Lihat profil dan data diri
+🔹 **/absen** - Clock in/out untuk absensi
+🔹 **/status** - Status project dan tim
+
+⚡ Bot ini akan memandu kamu step by step untuk setiap proses!`;
   }
 
-  // 3. Proses step-by-step
-  if (userStates[chatId] === 'menunggu_nama') {
-    userData[chatId].nama = text;
-    userStates[chatId] = 'menunggu_nomor';
-    await sendMessage(chatId, 'Sekarang kirim *nomor HP* kamu:');
-    return res.sendStatus(200);
+  // INFO COMMAND
+  else if (text === '/info') {
+    if (userData[userId]) {
+      const user = userData[userId];
+      reply = `👤 **Profil Kamu**
+
+📱 **No HP:** ${user.nomor}
+🆔 **NIK KTP:** ${user.nik}
+📝 **Nama:** ${user.nama}
+⚒️ **Posisi:** ${user.posisi}
+📅 **Terdaftar:** ${user.tanggalDaftar}
+📷 **Foto KTP:** ${user.fotoKtp ? '✅ Terupload' : '❌ Belum upload'}
+🤳 **Foto Selfie:** ${user.fotoSelfie ? '✅ Terupload' : '❌ Belum upload'}
+
+Status: ✅ Aktif`;
+    } else {
+      reply = "❌ Kamu belum terdaftar!\n\nKetik /daftar untuk registrasi terlebih dahulu.";
+    }
   }
 
-  if (userStates[chatId] === 'menunggu_nomor') {
-    userData[chatId].nomor = text;
-    userStates[chatId] = 'menunggu_nik';
-    await sendMessage(chatId, 'Terakhir, kirim *NIK* atau ID kamu:');
-    return res.sendStatus(200);
+  // DAFTAR COMMAND - Multi Step Registration
+  else if (text === '/daftar') {
+    if (userData[userId]) {
+      reply = `✅ Kamu sudah terdaftar!
+
+No HP: ${userData[userId].nomor}
+Nama: ${userData[userId].nama}
+Posisi: ${userData[userId].posisi}
+
+Ketik /info untuk lihat detail lengkap.`;
+    } else {
+      registrationSteps[userId] = { step: 'nomor' };
+      reply = `🏗️ **Registrasi Pekerja Konstruksi**
+
+Mari kita mulai proses registrasi!
+
+**Step 1/6**: Masukkan nomor HP kamu
+
+Contoh: 081234567890
+
+*Sistem akan mengecek database untuk validasi...*`;
+    }
   }
 
-  if (userStates[chatId] === 'menunggu_nik') {
-    userData[chatId].nik = text;
-    const data = userData[chatId];
-    console.log('User daftar:', data);
-    await sendMessage(chatId, `Terima kasih! Berikut data kamu:\n\nNama: ${data.nama}\nNo HP: ${data.nomor}\nNIK: ${data.nik}`);
-    delete userStates[chatId];
-    delete userData[chatId];
-    return res.sendStatus(200);
+  // ABSEN COMMAND
+  else if (text === '/absen') {
+    if (!userData[userId]) {
+      reply = "❌ Kamu belum terdaftar!\n\nKetik /daftar untuk registrasi terlebih dahulu.";
+    } else {
+      const now = new Date().toLocaleString('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      reply = `⏰ **Absensi Berhasil**
+
+👤 **${userData[userId].nama}**
+🕐 **Waktu:** ${now}
+📍 **Lokasi:** Proyek Konstruksi
+
+Status: ✅ Hadir
+
+*Absensi telah tercatat di sistem.*`;
+    }
   }
 
-  // 4. Fallback jika tidak cocok
-  await sendMessage(chatId, 'Saya tidak paham');
+  // HANDLE REGISTRATION STEPS
+  else if (registrationSteps[userId]) {
+    const step = registrationSteps[userId];
+    
+    // Handle foto upload
+    if (photo && (step.step === 'foto_ktp' || step.step === 'foto_selfie')) {
+      // Ambil foto dengan kualitas terbaik (index terakhir)
+      const bestPhoto = photo[photo.length - 1];
+      const fileId = bestPhoto.file_id;
+      
+      if (step.step === 'foto_ktp') {
+        step.fotoKtp = fileId;
+        step.step = 'foto_selfie';
+        reply = `✅ Foto KTP berhasil diterima!
+
+**Step 6/6**: Upload Foto Selfie
+
+🤳 Kirim foto selfie kamu yang jelas.
+
+*Foto harus menunjukkan wajah dengan jelas (tidak pakai masker, kacamata hitam, dll)*`;
+      } 
+      else if (step.step === 'foto_selfie') {
+        step.fotoSelfie = fileId;
+        
+        // Simpan ke database utama - REGISTRASI SELESAI
+        userData[userId] = {
+          nomor: step.nomor,
+          nik: step.nik,
+          nama: step.nama,
+          posisi: step.posisi,
+          fotoKtp: step.fotoKtp,
+          fotoSelfie: step.fotoSelfie,
+          tanggalDaftar: new Date().toLocaleDateString('id-ID'),
+          telegramId: userId
+        };
+        
+        // Hapus dari registrationSteps
+        delete registrationSteps[userId];
+        
+        reply = `🎉 **Registrasi Berhasil!**
+
+✅ **Data Lengkap Tersimpan:**
+📱 **No HP:** ${step.nomor}
+🆔 **NIK KTP:** ${step.nik}
+👤 **Nama:** ${step.nama}
+⚒️ **Posisi:** ${step.posisi}
+📷 **Foto KTP:** ✅ Terupload
+🤳 **Foto Selfie:** ✅ Terupload
+
+Sekarang kamu bisa:
+• /absen - untuk absensi harian
+• /info - lihat profil lengkap
+
+Selamat datang di tim! 🚀`;
+      }
+    }
+    // Handle jika user kirim text saat diminta foto
+    else if (text && (step.step === 'foto_ktp' || step.step === 'foto_selfie')) {
+      const jenisPhoto = step.step === 'foto_ktp' ? 'Foto KTP' : 'Foto Selfie';
+      reply = `❌ ${jenisPhoto} harus berupa gambar!
+
+📷 Silakan kirim foto (bukan text) dengan menekan tombol attachment/camera di Telegram.`;
+    }
+    // Handle step text lainnya
+    else if (text) {
+    if (step.step === 'nama') {
+      if (text.length < 3) {
+        reply = "❌ Nama terlalu pendek!\n\nMasukkan nama lengkap kamu (minimal 3 karakter):";
+      } else {
+        step.nama = text;
+        step.step = 'nik';
+        reply = `✅ Nama: ${text}
+
+**Step 2/6**: Masukkan NIK KTP (16 digit)
+
+Contoh: 3271234567890123`;
+      }
+    }
+    
+    else if (step.step === 'nik') {
+      if (!/^\d{16}$/.test(text)) {
+        reply = "❌ NIK KTP harus 16 digit angka!\n\nContoh: 3271234567890123\n\nMasukkan NIK KTP yang benar:";
+      } else {
+        // Cek duplikat NIK
+        const nikExists = Object.values(userData).some(user => user.nik === text);
+        if (nikExists) {
+          reply = "❌ NIK KTP sudah terdaftar di sistem!\n\nGunakan NIK lain atau hubungi admin jika ada kesalahan.";
+        } else {
+          step.nik = text;
+          step.step = 'nomor';
+          reply = `✅ NIK KTP: ${text}
+
+**Step 3/6**: Masukkan nomor HP
+
+Contoh: 081234567890`;
+        }
+      }
+    }
+    
+    else if (step.step === 'nomor') {
+      if (!/^08\d{8,11}$/.test(text)) {
+        reply = "❌ Format nomor HP salah!\n\nGunakan format: 08xxxxxxxxxx\n\nContoh: 081234567890";
+      } else {
+        step.nomor = text;
+        step.step = 'posisi';
+        step.nomor = text;
+        step.step = 'posisi';
+        reply = `✅ No HP: ${text}
+
+**Step 4/6**: Pilih posisi/jabatan kamu:
+
+1️⃣ Mandor
+2️⃣ Tukang Batu
+3️⃣ Tukang Kayu
+4️⃣ Tukang
+5️⃣ Semi Tukang
+6️⃣ Operator Alat Berat
+7️⃣ Pekerja Umum (Kenek)
+8️⃣ Supervisor
+9️⃣ Quality Control
+
+Ketik angka (1-9):`;
+      }
+    }
+    
+    else if (step.step === 'posisi') {
+      const posisiMap = {
+        '1': 'Mandor',
+        '2': 'Tukang Batu', 
+        '3': 'Tukang Kayu',
+        '4': 'Tukang',
+        '5': 'Semi Tukang',
+        '6': 'Operator Alat Berat',
+        '7': 'Pekerja Umum (Kenek)',
+        '8': 'Supervisor',
+        '9': 'Quality Control'
+      };
+      
+      if (!posisiMap[text]) {
+        reply = "❌ Pilihan tidak valid!\n\nKetik angka 1-9 sesuai posisi kamu:";
+      } else {
+        step.posisi = posisiMap[text];
+        step.step = 'foto_ktp';
+        reply = `✅ Posisi: ${step.posisi}
+
+**Step 5/6**: Upload Foto KTP
+
+📷 Kirim foto KTP kamu yang jelas dan bisa dibaca.
+
+*Pastikan foto tidak blur dan semua text terlihat jelas.*`;
+      }
+    }
+  }
+
+  // DEFAULT RESPONSE (hanya jika ada text dan bukan dalam proses registrasi)
+  else if (text) {
+    reply = `Saya tidak paham perintah "${text}" 🤔
+
+Ketik /help untuk melihat daftar perintah yang tersedia.`;
+  }
+
+  // Kirim balasan hanya jika ada reply
+  if (reply) {
+    await sendMessage(chatId, reply);
+  }
+  
   res.sendStatus(200);
 });
 
-
-// Fungsi untuk mengirim pesan ke Telegram
 app.listen(port, () => {
-  console.log(`Server jalan di port ${port}`);
+  console.log(`Server berjalan di port ${port} 🚀`);
 });
