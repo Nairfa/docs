@@ -77,7 +77,6 @@ async function sendMessage(chatId, text) {
   }
 }
 
-// Webhook endpoint dari Telegram
 app.post(['/webhook', '/webhook/'], async (req, res) => {
   console.log('Webhook diterima 🚀', JSON.stringify(req.body, null, 2));
 
@@ -87,15 +86,10 @@ app.post(['/webhook', '/webhook/'], async (req, res) => {
   const chatId = msg.chat.id;
   const text = msg.text.trim();
 
-  // Proses step-by-step pendaftaran
-  // Cek kalau user sedang isi nama, nomor, atau NIK tapi kirim perintah (command)
-if (text.startsWith('/')) {
-  await sendMessage(chatId, 'Kamu sedang dalam proses pendaftaran. Harap kirim data yang diminta, bukan perintah.');
-  return res.sendStatus(200);
-}
-  // Cek apakah user sudah mulai pendaftaran
-  if (!userStates[chatId]) {
-    userStates[chatId] = 'idle'; // Set status awal
+  // 1. Perintah utama dulu
+  if (text === '/start') {
+    await sendMessage(chatId, 'Halo! Bot Telegram sudah aktif 🚀');
+    return res.sendStatus(200);
   }
   if (text === '/daftar') {
     userStates[chatId] = 'menunggu_nama';
@@ -103,18 +97,28 @@ if (text.startsWith('/')) {
     await sendMessage(chatId, 'Silakan kirim *nama lengkap* kamu:');
     return res.sendStatus(200);
   }
+
+  // 2. Kalau user sedang dalam proses input, tapi malah kirim command lain
+  if (text.startsWith('/')) {
+    await sendMessage(chatId, 'Kamu sedang dalam proses pendaftaran. Harap kirim data yang diminta, bukan perintah.');
+    return res.sendStatus(200);
+  }
+
+  // 3. Proses step-by-step
   if (userStates[chatId] === 'menunggu_nama') {
     userData[chatId].nama = text;
     userStates[chatId] = 'menunggu_nomor';
     await sendMessage(chatId, 'Sekarang kirim *nomor HP* kamu:');
     return res.sendStatus(200);
   }
+
   if (userStates[chatId] === 'menunggu_nomor') {
     userData[chatId].nomor = text;
     userStates[chatId] = 'menunggu_nik';
     await sendMessage(chatId, 'Terakhir, kirim *NIK* atau ID kamu:');
     return res.sendStatus(200);
   }
+
   if (userStates[chatId] === 'menunggu_nik') {
     userData[chatId].nik = text;
     const data = userData[chatId];
@@ -124,15 +128,12 @@ if (text.startsWith('/')) {
     delete userData[chatId];
     return res.sendStatus(200);
   }
-  // Fallback default
-  if (text === '/start') {
-    await sendMessage(chatId, 'Halo! Bot Telegram sudah aktif 🚀');
-    return res.sendStatus(200);
-  }
-  // Fallback jika perintah tidak dikenali
+
+  // 4. Fallback jika tidak cocok
   await sendMessage(chatId, 'Saya tidak paham');
   res.sendStatus(200);
 });
+
 
 // Fungsi untuk mengirim pesan ke Telegram
 app.listen(port, () => {
