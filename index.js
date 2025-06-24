@@ -67,83 +67,54 @@ async function sendMessage(chatId, text) {
 }
 
 // Webhook endpoint dari Telegram
-app.post('/webhook', async (req, res) => {
+app.post(['/webhook', '/webhook/'], async (req, res) => {
+  console.log('Webhook diterima 🚀', JSON.stringify(req.body, null, 2));
+
   const msg = req.body.message;
   if (!msg || !msg.text) return res.sendStatus(200);
 
   const chatId = msg.chat.id;
   const text = msg.text.trim();
 
-  // 1. Mulai proses daftar
+  // Proses step-by-step pendaftaran
   if (text === '/daftar') {
     userStates[chatId] = 'menunggu_nama';
     userData[chatId] = {};
-    return sendMessage(chatId, 'Silakan kirim *nama lengkap* kamu:');
+    await sendMessage(chatId, 'Silakan kirim *nama lengkap* kamu:');
+    return res.sendStatus(200);
   }
-
-  // 2. Step: nama
   if (userStates[chatId] === 'menunggu_nama') {
     userData[chatId].nama = text;
     userStates[chatId] = 'menunggu_nomor';
-    return sendMessage(chatId, 'Sekarang kirim *nomor HP* kamu:');
+    await sendMessage(chatId, 'Sekarang kirim *nomor HP* kamu:');
+    return res.sendStatus(200);
   }
-
-  // 3. Step: nomor HP
   if (userStates[chatId] === 'menunggu_nomor') {
     userData[chatId].nomor = text;
     userStates[chatId] = 'menunggu_nik';
-    return sendMessage(chatId, 'Terakhir, kirim *NIK* atau ID kamu:');
+    await sendMessage(chatId, 'Terakhir, kirim *NIK* atau ID kamu:');
+    return res.sendStatus(200);
   }
-
-  // 4. Step: NIK
   if (userStates[chatId] === 'menunggu_nik') {
     userData[chatId].nik = text;
-    userStates[chatId] = null; // Reset status user
-
     const data = userData[chatId];
     console.log('User daftar:', data);
-
-    return sendMessage(chatId,
-      `✅ *Data kamu sudah tercatat:*\n\n` +
-      `*Nama:* ${data.nama}\n` +
-      `*No HP:* ${data.nomor}\n` +
-      `*NIK:* ${data.nik}`
-    );
+    await sendMessage(chatId, `Terima kasih! Berikut data kamu:\n\nNama: ${data.nama}\nNo HP: ${data.nomor}\nNIK: ${data.nik}`);
+    delete userStates[chatId];
+    delete userData[chatId];
+    return res.sendStatus(200);
   }
-
-  // 5. Default /start
+  // Fallback default
   if (text === '/start') {
-    return sendMessage(chatId, 'Halo! Bot Telegram sudah aktif 🚀\nGunakan /daftar untuk mulai.');
+    await sendMessage(chatId, 'Halo! Bot Telegram sudah aktif 🚀');
+    return res.sendStatus(200);
   }
-
+  // Fallback jika perintah tidak dikenali
+  await sendMessage(chatId, 'Saya tidak paham');
   res.sendStatus(200);
 });
-  console.log('Webhook diterima 🚀', JSON.stringify(req.body, null, 2));
 
-  const msg = req.body.message;
-
-  if (!msg || !msg.text) return res.sendStatus(200);
-
-  const chatId = msg.chat.id;
-  const text = msg.text;
-
-  let reply = "Saya tidak paham";
-
-  if (text === '/start') {
-    reply = "Halo! Bot Telegram sudah aktif 🚀";
-  }
-
-  try {
-    await axios.post(`${TELEGRAM_API}/sendMessage`, {
-      chat_id: chatId,
-      text: reply
-    });
-  } catch (err) {
-    console.error('Gagal mengirim pesan ke Telegram:', err.message);
-  }
-
-  res.sendStatus(200);
-  // Fungsi untuk mengirim pesan ke Telegram
+// Fungsi untuk mengirim pesan ke Telegram
 app.listen(port, () => {
   console.log(`Server jalan di port ${port}`);
 });
