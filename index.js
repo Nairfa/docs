@@ -28,7 +28,22 @@ let blacklistData = {
   nik: ['3271234567890123', '3271234567890124'], // NIK yang diblacklist
   suspend: ['081111111111', '3271234567890125'] // Data yang di-suspend
 };
-
+// Helper validasi
+function isValidPhoneNumber(phone) {
+  return /^08\d{8,11}$/.test(phone);
+}
+function isValidNIK(nik) {
+  return /^\d{16}$/.test(nik);
+}
+function isValidName(name) {
+  return name && name.length >= 3;
+}
+function isBlacklistedNomor(nomor) {
+  return blacklistData.hp.includes(nomor) || blacklistData.suspend.includes(nomor);
+}
+function isBlacklistedNIK(nik) {
+  return blacklistData.nik.includes(nik) || blacklistData.suspend.includes(nik);
+}
 app.get('/', (req, res) => {
   res.send('App jalan di Railway! 🚀');
 });
@@ -185,46 +200,58 @@ Status: ✅ Hadir
       } 
       else if (step.step === 'foto_selfie') {
         step.fotoSelfie = fileId;
-        
-        // Simpan ke database utama - REGISTRASI SELESAI
-        userData[userId] = {
-          nomor: step.nomor,
-          nik: step.nik,
-          nama: step.nama,
-          posisi: step.posisi,
-          fotoKtp: step.fotoKtp,
-          fotoSelfie: step.fotoSelfie,
-          tanggalDaftar: new Date().toLocaleDateString('id-ID'),
-          telegramId: userId
-        };
-        
-        // Hapus dari registrationSteps
-        delete registrationSteps[userId];
-        
-        reply = `🎉 **Registrasi Berhasil!**
-
-✅ **Data Lengkap Tersimpan:**
-📱 **No HP:** ${step.nomor}
-🆔 **NIK KTP:** ${step.nik}
-👤 **Nama:** ${step.nama}
-⚒️ **Posisi:** ${step.posisi}
-📷 **Foto KTP:** ✅ Terupload
-🤳 **Foto Selfie:** ✅ Terupload
-
-Sekarang kamu bisa:
-• /absen - untuk absensi harian
-• /info - lihat profil lengkap
-
-Selamat datang di tim! 🚀`;
-      }
+// STEP 1: NOMOR HP (PRIORITAS PERTAMA)
+if (step.step === 'nomor') {
+  if (!isValidPhoneNumber(text)) {
+    reply = "❌ Format nomor HP salah!\n\nGunakan format: 08xxxxxxxxxx\n\nContoh: 081234567890";
+  } else if (isBlacklistedNomor(text)) {
+    delete registrationSteps[userId];
+    reply = `🚫 **REGISTRASI DITOLAK**\n\nNomor HP ${text} terdapat dalam daftar blacklist sistem.\n\nHubungi admin untuk informasi lebih lanjut.`;
+  } else {
+    // Cek duplikat HP
+    const hpExists = Object.values(userData).some(user => user.nomor === text);
+    if (hpExists) {
+      delete registrationSteps[userId];
+      reply = `❌ **REGISTRASI GAGAL**\n\nNomor HP ${text} sudah terdaftar di sistem!\n\nGunakan nomor HP lain atau hubungi admin jika ada kesalahan.`;
+    } else {
+      step.nomor = text;
+      step.step = 'nik';
+      reply = `✅ No HP: ${text} - Valid\n\n**Step 2/6**: Masukkan NIK KTP (16 digit)\n\nContoh: 3271234567890123\n\n*Sistem akan memvalidasi NIK di database...*`;
     }
-    // Handle jika user kirim text saat diminta foto
-    else if (text && (step.step === 'foto_ktp' || step.step === 'foto_selfie')) {
-      const jenisPhoto = step.step === 'foto_ktp' ? 'Foto KTP' : 'Foto Selfie';
-      reply = `❌ ${jenisPhoto} harus berupa gambar!
+  }
+}
 
-📷 Silakan kirim foto (bukan text) dengan menekan tombol attachment/camera di Telegram.`;
+// STEP 2: NIK KTP 
+else if (step.step === 'nik') {
+  if (!isValidNIK(text)) {
+    reply = "❌ NIK KTP harus 16 digit angka!\n\nContoh: 3271234567890123\n\nMasukkan NIK KTP yang benar:";
+  } else if (isBlacklistedNIK(text)) {
+    delete registrationSteps[userId];
+    reply = `🚫 **REGISTRASI DITOLAK**\n\nNIK KTP ${text} terdapat dalam daftar blacklist sistem.\n\nHubungi admin untuk informasi lebih lanjut.`;
+  } else {
+    // Cek duplikat NIK
+    const nikExists = Object.values(userData).some(user => user.nik === text);
+    if (nikExists) {
+      delete registrationSteps[userId];
+      reply = `❌ **REGISTRASI GAGAL**\n\nNIK KTP ${text} sudah terdaftar di sistem!\n\nGunakan NIK lain atau hubungi admin jika ada kesalahan.`;
+    } else {
+      step.nik = text;
+      step.step = 'nama';
+      reply = `✅ NIK KTP: ${text} - Valid\n\n**Step 3/6**: Siapa nama lengkap kamu?\n\nContoh: Budi Santoso`;
     }
+  }
+}
+
+// STEP 3: NAMA
+else if (step.step === 'nama') {
+  if (!isValidName(text)) {
+    reply = "❌ Nama terlalu pendek!\n\nMasukkan nama lengkap kamu (minimal 3 karakter):";
+  } else {
+    step.nama = text;
+    step.step = 'posisi';
+    reply = `✅ Nama: ${text}\n\n**Step 4/6**: Pilih posisi/jabatan kamu:\n\n1️⃣ Mandor\n2️⃣ Tukang Batu\n3️⃣ Tukang Kayu\n4️⃣ Tukang\n5️⃣ Semi Tukang\n6️⃣ Operator Alat Berat\n7️⃣ Pekerja Umum (Kenek)\n8️⃣ Supervisor\n9️⃣ Quality Control\n\nKetik angka (1-9):`;
+  }
+}
     // Handle step text lainnya
     else if (text) {
     if (step.step === 'nama') {
